@@ -22,10 +22,33 @@
   #include <linux/earlysuspend.h>
 #endif
 
-#define TEST_MUGEN 0
+#define TEST_MUGEN 1
+
+//n0p
+#define HIGHEST_VOLT 4130
+//#define HIGHEST_VOLT 4110
+#define LOWEST_VOLT 3390
+//#define LOWEST_VOLT 3550
+#define CHARGE_CORRECTION 70
+#define VSAMPLES 48
+
 
 #if (TEST_MUGEN)
-static int is_mugen = 0;
+
+static int use_mugen = 0;
+static int highest_mv = 4130;
+static int lowest_mv = 3390;
+static int charger_correction = 70;
+static int interpolation = 48;
+static int log = 0;
+
+module_param(use_mugen, int, 0644);
+module_param(highest_mv, int, 0644);
+module_param(lowest_mv, int, 0644);
+module_param(charger_correction, int, 0644);
+module_param(interpolation, int, 0644);
+module_param(log, int, 0644);
+
 static int a_voltage = 0;
 static int c_voltage = 0;
 static int e_charger = 0;
@@ -345,10 +368,12 @@ static void qsd_bat_charge_log(void)
     );
   MSG2("CHG_INT=%d, BAT_LOW=%d", gpio_get_value(qb_data.gpio_chg_int),gpio_get_value(qb_data.gpio_bat_low));
 
+#if 0
 #if (TEST_MUGEN)
-    if (reg30_3c[1]==0) is_mugen=1;
-    if (is_mugen) MSG2("MUGEN Battery");
-    is_mugen=1;
+    //if (reg30_3c[1]==0) is_mugen=1;
+    //if (is_mugen) MSG2("MUGEN Battery");
+    //is_mugen=1;
+#endif
 #endif
 
 }
@@ -671,27 +696,30 @@ static void qsd_bat_work_func(struct work_struct *work)
 
 //n0p
 #define HIGHEST_VOLT 4130
-//#define LOWEST_VOLT 3690
-#define LOWEST_VOLT 3550
+//#define HIGHEST_VOLT 4110
+#define LOWEST_VOLT 3390
+//#define LOWEST_VOLT 3550
 #define CHARGE_CORRECTION 70
-#define VSAMPLES 32
+#define VSAMPLES 48
+
+#define BFLOAT 256
 
 #if (TEST_MUGEN)
-      if (is_mugen) {
+      if (use_mugen) {
 	if (gag_data[GAG_AI]>0) {
 		if (!e_charger) { a_voltage=0; e_charger=1; };
-		c_voltage=gag_data[GAG_VOLT]-CHARGE_CORRECTION;
+		c_voltage=gag_data[GAG_VOLT]-charger_correction;
 	} else {
 		if (e_charger) { a_voltage=0; e_charger=0; };
 		c_voltage=gag_data[GAG_VOLT];
 	};
-	if (a_voltage==0) a_voltage=c_voltage;
-        a_voltage = a_voltage*(VSAMPLES-1)+c_voltage;
-	a_voltage = a_voltage/VSAMPLES;
-	qb_data.bat_capacity =  (a_voltage - LOWEST_VOLT) / ((HIGHEST_VOLT-LOWEST_VOLT)/100) ;
+	if (a_voltage==0) a_voltage=c_voltage*BFLOAT;
+        a_voltage = a_voltage*(interpolation-1)+c_voltage*BFLOAT;
+	a_voltage = a_voltage/interpolation;
+	qb_data.bat_capacity =  ((a_voltage/BFLOAT) - lowest_mv) / ((highest_mv-lowest_mv)/100) ;
 	if (qb_data.bat_capacity > 100) qb_data.bat_capacity = 100;
 	if (qb_data.bat_capacity < 0  ) qb_data.bat_capacity = 0;
-	MSG2(" average mV: %d corrected mV: %d current real mV: %d mA: %d",a_voltage,c_voltage,gag_data[GAG_VOLT],gag_data[GAG_AI]);
+	if (log) { MSG2("DSC Mugen: average mV: %d corrected mV: %d current real mV: %d mA: %d",a_voltage/BFLOAT,c_voltage,gag_data[GAG_VOLT],gag_data[GAG_AI]); };
       } else {
 #endif
 

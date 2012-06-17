@@ -1056,6 +1056,7 @@ dhd_watchdog_thread(void *data)
 #ifdef DHD_SCHED
 	if (dhd_watchdog_prio > 0)
 	{
+//n0p
 #if 0
 		struct sched_param param;
 		param.sched_priority = (dhd_watchdog_prio < MAX_RT_PRIO)?
@@ -1138,6 +1139,7 @@ dhd_dpc_thread(void *data)
 #ifdef DHD_SCHED
 	if (dhd_dpc_prio > 0)
 	{
+//n0p
 #if 0
 		struct sched_param param;
 		param.sched_priority = (dhd_dpc_prio < MAX_RT_PRIO)?dhd_dpc_prio:(MAX_RT_PRIO-1);

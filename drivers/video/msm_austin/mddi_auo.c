@@ -60,6 +60,10 @@ static struct wake_lock lcd_idlelock;
 
 #define	BACKLIGHT_EARLY_SUSPEND
 
+static int t2_register=0x1BC;
+//static int vsync=1;
+module_param(t2_register,int,0644);
+//module_param(vsync,int,0644);
 
 static int auo_lcd_on(struct platform_device *pdev);
 static int auo_lcd_off(struct platform_device *pdev);
@@ -963,7 +967,7 @@ static void mddi_auo_prim_lcd_init(void)
   mddi_queue_register_write(0xC202, 0x32, FALSE, 0);
   mddi_queue_register_write(0xC100, 0x40, FALSE, 0);
   mddi_queue_register_write(0xC700, 0x8B, FALSE, 0);
-  mddi_queue_register_write(0xB102, 0xBC, FALSE, 0);
+  mddi_queue_register_write(0xB102, t2_register & 0xFF, FALSE, 0);
 
   mddi_queue_register_write(0x1100, 0, FALSE, 0);
   msleep(100);
@@ -1027,7 +1031,7 @@ static int auo_lcd_on(struct platform_device *pdev)
 			  mddi_queue_register_write(0x3500, 0x0002, FALSE, 0);
 			  mddi_queue_register_write(0x4400, 0x0000, FALSE, 0);
 			  mddi_queue_register_write(0x4401, 0x0000, FALSE, 0);
-			  mddi_queue_register_write(0xB102, 0xBC, FALSE, 0);
+			  mddi_queue_register_write(0xB102, t2_register & 0xFF, FALSE, 0);
 
 			write_multi_mddi_reg(auo_lcd_bkl_init_array);
 			if(bkl_labc_stage == 0xFFFFFFFF)
@@ -1193,6 +1197,7 @@ static struct platform_device this_device = {
 void mddi_lcd_disp_powerup(void)
 {
 	struct vreg	*vreg_mddi_lcd = vreg_get(0, "gp1");
+
 	vreg_enable(vreg_mddi_lcd);
 	vreg_set_level(vreg_mddi_lcd, 3000);
 	printk(KERN_ERR "Jackie: turn on vreg 3.0V for LCD panel\n");
@@ -1402,7 +1407,8 @@ static int __ref auo_init(void)
 		pinfo->pdest = DISPLAY_2;
 		pinfo->mddi.vdopkt = MDDI_DEFAULT_PRIM_PIX_ATTR;
 		pinfo->wait_cycle = 0;
-		pinfo->bpp = 18;
+		//pinfo->bpp = 18;
+		pinfo->bpp = 16;
 		pinfo->fb_num = 2;
 		if (panel_id ==0)
 		{
@@ -1416,11 +1422,13 @@ static int __ref auo_init(void)
 			pinfo->clk_min = 190000000;
 			pinfo->clk_max = 200000000;
 		}
+		//if (vsync) pinfo->lcd.vsync_enable = TRUE; else pinfo->lcd.vsync_enable = FALSE;
 		pinfo->lcd.vsync_enable = TRUE;
 		pinfo->lcd.refx100 = 6000;
 		pinfo->lcd.v_back_porch = 0;
 		pinfo->lcd.v_front_porch = 0;
 		pinfo->lcd.v_pulse_width = 0;
+		//if (vsync) pinfo->lcd.hw_vsync_mode = TRUE; else pinfo->lcd.hw_vsync_mode = FALSE;
 		pinfo->lcd.hw_vsync_mode = TRUE;
 		pinfo->lcd.vsync_notifier_period = 0;
 

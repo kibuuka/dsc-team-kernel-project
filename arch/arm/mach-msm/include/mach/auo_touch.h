@@ -46,6 +46,8 @@
 
 #if USE_AUO_5INCH
 
+#define TOUCH_FB_PORTRAIT 1	//cm7
+
 #if defined(TOUCH_FB_PORTRAIT)
 	#define AUO_X_MAX	     480
 	#define AUO_Y_MAX	     800
