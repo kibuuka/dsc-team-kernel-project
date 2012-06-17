@@ -29,7 +29,7 @@
 #define _wl_iw_h_
 
 #include <linux/wireless.h>
-
+#include <linux/semaphore.h>  /*kibuuka*/
 #include <typedefs.h>
 #include <proto/ethernet.h>
 #include <wlioctl.h>
